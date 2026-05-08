@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Tables</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --surface: #141414;
+      --border: #2a2a2a;
+      --accent: #c8f135;
+      --accent2: #35f1c8;
+      --text: #f0f0f0;
+      --muted: #666;
+      --font-display: 'Syne', sans-serif;
+      --font-mono: 'DM Mono', monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      min-height: 100vh;
+      padding: 60px 24px 80px;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(200,241,53,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(200,241,53,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .container { max-width: 780px; margin: 0 auto; position: relative; z-index: 1; }
+    header { margin-bottom: 64px; animation: fadeUp 0.6s ease both; }
+    .eyebrow { font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+    h1 { font-family: var(--font-display); font-size: clamp(2.4rem, 6vw, 4rem); font-weight: 800; line-height: 1.05; letter-spacing: -0.02em; }
+    h1 span { color: var(--accent); }
+    .section { margin-bottom: 64px; animation: fadeUp 0.6s ease both; }
+    .section:nth-child(2) { animation-delay: 0.1s; }
+    .section:nth-child(3) { animation-delay: 0.2s; }
+    .section-header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .section-label { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; }
+    .section-tag { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+    .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { background: #1c1c1c; }
+    thead th { padding: 14px 20px; text-align: left; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s ease; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #1a1a1a; }
+    td { padding: 13px 20px; font-size: 14px; }
+    td:first-child { color: var(--accent); font-weight: 500; width: 50%; }
+    .table2 td:last-child { color: var(--accent2); font-weight: 500; font-size: 16px; }
+    .note { margin-top: 12px; font-size: 11px; color: var(--muted); letter-spacing: 0.08em; }
+    .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); margin-right: 6px; animation: pulse 2s ease infinite; vertical-align: middle; }
+    .loading { color: var(--muted); font-size: 13px; padding: 20px; text-align: center; }
+    .error { color: #f13535; font-size: 13px; padding: 20px; text-align: center; }
+    footer { margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; animation: fadeUp 0.6s 0.3s ease both; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <p class="eyebrow">Mulah Tech Assessment Submission</p>
+      <h1>Data <span>Tables</span></h1>
+    </header>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-label">Table 1</span>
+        <span class="section-tag">Input Data — Table_Input.csv</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Index #</th><th>Value</th></tr></thead>
+          <tbody id="table1-body">
+            <tr><td colspan="2" class="loading">Loading CSV...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-label">Table 2</span>
+        <span class="section-tag">Computed from Table 1</span>
+      </div>
+      <div class="table-wrap table2">
+        <table>
+          <thead><tr><th>Category</th><th>Value</th></tr></thead>
+          <tbody id="table2-body">
+            <tr><td colspan="2" class="loading">Computing...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note" id="note" style="display:none">
+        <span class="dot"></span>
+        <span id="note-text"></span>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    function parseCSV(text) {
+      const lines = text.trim().split('\n');
+      const data = {};
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(',');
+        if (cols.length < 2) continue;
+        const index = cols[0].trim();
+        const value = parseInt(cols[1].trim(), 10);
+        if (index && !isNaN(value)) {
+          data[index] = value;
+        }
+      }
+      return data;
+    }
+
+    function renderTable1(data) {
+      const tbody = document.getElementById('table1-body');
+      const rows = Object.entries(data)
+        .map(([idx, val]) => `<tr><td>${idx}</td><td>${val}</td></tr>`)
+        .join('');
+      tbody.innerHTML = rows || '<tr><td colspan="2" class="error">No data found.</td></tr>';
+    }
+
+    /**
+     * Alpha  = A5  + A20
+     * Beta   = A15 / A7
+     * Charlie= A13 * A12
+     */
+    function renderTable2(data) {
+      const A5  = data['A5'],  A20 = data['A20'];
+      const A15 = data['A15'], A7  = data['A7'];
+      const A13 = data['A13'], A12 = data['A12'];
+
+      const alpha   = A5  + A20;           // addition
+      const beta    = A15 / A7;            // division  → integer result (80/5=16)
+      const charlie = A13 * A12;           // multiplication
+
+      const tbody = document.getElementById('table2-body');
+      tbody.innerHTML = `
+        <tr><td>Alpha</td><td>${alpha}</td></tr>
+        <tr><td>Beta</td><td>${beta}</td></tr>
+        <tr><td>Charlie</td><td>${charlie}</td></tr>
+      `;
+
+      // Show formula note
+      const note = document.getElementById('note');
+      const noteText = document.getElementById('note-text');
+      noteText.textContent =
+        `Alpha = A5(${A5}) + A20(${A20}) = ${alpha}  |  ` +
+        `Beta = A15(${A15}) / A7(${A7}) = ${beta}  |  ` +
+        `Charlie = A13(${A13}) x A12(${A12}) = ${charlie}`;
+      note.style.display = 'block';
+    }
+
+    /**
+     * Main: fetch CSV, parse, render both tables.
+     */
+    async function init() {
+      try {
+        const response = await fetch('Table_Input.csv');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const text = await response.text();
+        const data = parseCSV(text);
+        renderTable1(data);
+        renderTable2(data);
+      } catch (err) {
+        console.error(err);
+        document.getElementById('table1-body').innerHTML =
+          `<tr><td colspan="2" class="error">Failed to load CSV: ${err.message}</td></tr>`;
+        document.getElementById('table2-body').innerHTML =
+          `<tr><td colspan="2" class="error">Cannot compute — CSV not loaded.</td></tr>`;
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
