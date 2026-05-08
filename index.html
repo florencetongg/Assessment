@@ -142,9 +142,9 @@
       const A15 = data['A15'], A7  = data['A7'];
       const A13 = data['A13'], A12 = data['A12'];
 
-      const alpha   = A5  + A20;           // addition
-      const beta    = A15 / A7;            // division  → integer result (80/5=16)
-      const charlie = A13 * A12;           // multiplication
+      const alpha   = A5  + A20;        
+      const beta    = A15 / A7;            
+      const charlie = A13 * A12;           
 
       const tbody = document.getElementById('table2-body');
       tbody.innerHTML = `
@@ -153,7 +153,6 @@
         <tr><td>Charlie</td><td>${charlie}</td></tr>
       `;
 
-      // Show formula note
       const note = document.getElementById('note');
       const noteText = document.getElementById('note-text');
       noteText.textContent =
@@ -163,9 +162,6 @@
       note.style.display = 'block';
     }
 
-    /**
-     * Main: fetch CSV, parse, render both tables.
-     */
     async function init() {
       try {
         const response = await fetch('Table_Input.csv');
